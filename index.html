@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPFR Fleet &amp; Equipment Replacement Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-npfr">
+
+<div id="header">
+  <div class="agency">
+    <img src="public/Logo.png" alt="" style="width:26px;height:26px;object-fit:contain" onerror="this.style.display='none'">
+    NPFR <span class="badge">Fleet</span>
+  </div>
+  <div class="plan-title" id="plan-title">Apparatus &amp; Equipment Replacement Schedule</div>
+  <div class="hdr-spacer"></div>
+
+  <div class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" data-view="overview">Overview</button>
+    <button class="nav-tab" data-view="timeline">Timeline</button>
+    <button class="nav-tab" data-view="units">Units</button>
+    <button class="nav-tab" data-view="forecast">Forecast</button>
+  </div>
+
+  <div class="hdr-search-wrap">
+    <input type="text" id="hdr-search" class="hdr-search" placeholder="Search unit, CID#…">
+  </div>
+
+  <div class="theme-switcher">
+    <button class="theme-btn" data-theme="dark">Dark</button>
+    <button class="theme-btn active" data-theme="npfr">RED</button>
+    <button class="theme-btn" data-theme="light">Light</button>
+  </div>
+
+  <button class="hdr-btn hdr-btn-pri" id="export-btn">↓ Excel</button>
+</div>
+
+<div class="banner" id="data-banner"></div>
+
+<div id="layout">
+
+  <!-- ══ OVERVIEW VIEW ══ -->
+  <div class="view active" id="view-overview">
+    <div class="section-heading">Program Summary</div>
+    <div class="summary-strip" id="summary-strip"></div>
+
+    <div class="section-heading">By Vehicle Type <span class="section-sub" id="overview-sub"></span></div>
+    <div id="overview-grid"></div>
+  </div>
+
+  <!-- ══ TIMELINE VIEW ══ -->
+  <div class="view" id="view-timeline">
+    <div class="section-heading">Replacement Timeline <span class="section-sub" id="timeline-sub"></span></div>
+    <div id="timeline-body"></div>
+  </div>
+
+  <!-- ══ UNITS TABLE VIEW ══ -->
+  <div class="view" id="view-units">
+    <div class="section-heading">All Units <span class="section-sub" id="units-sub"></span></div>
+    <div class="table-controls">
+      <select class="filter-select" id="filter-type">
+        <option value="">All vehicle types</option>
+      </select>
+      <select class="filter-select" id="filter-year">
+        <option value="">All replacement years</option>
+      </select>
+    </div>
+    <div class="table-scroll">
+    <table class="data-table" id="units-table">
+      <thead>
+        <tr>
+          <th data-key="type">Vehicle Type</th>
+          <th data-key="unit">Unit</th>
+          <th data-key="cid">CID#</th>
+          <th data-key="inServiceYear">In-Service</th>
+          <th data-key="replacementYear" class="sorted asc">Replacement Year</th>
+          <th data-key="years">Years Out</th>
+          <th data-key="originalCost">Vehicle Cost</th>
+          <th data-key="equipmentCost">Equipment Cost</th>
+          <th data-key="vehicleCost">Vehicle Repl. Cost</th>
+          <th data-key="equipmentCost_calc">Equipment Repl. Cost</th>
+          <th data-key="totalCost">Total Replacement Cost</th>
+        </tr>
+      </thead>
+      <tbody id="units-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- ══ FORECAST VIEW ══ -->
+  <div class="view" id="view-forecast">
+    <div class="section-heading">Budget Forecast <span class="section-sub">Replacement cost by year, stacked by vehicle type · dashed line = cumulative total</span></div>
+    <div class="chart-wrap">
+      <div class="chart-legend" id="chart-legend"></div>
+      <svg id="forecast-svg" viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="summary-strip" id="forecast-strip"></div>
+  </div>
+
+  <div class="foot-note" id="foot-note"></div>
+</div>
+
+<div class="chart-tooltip" id="chart-tooltip"></div>
+
+<script>
+const TYPES = ['Engine','Aerial','Rescue','Staff'];
+const TYPE_HEX = { Engine:'#B71C1C', Aerial:'#E65100', Rescue:'#6A1B9A', Staff:'#1565C0' };
+
+let PLAN = null;      // raw fetched JSON
+let UNITS = [];       // computed unit rows
+let sortKey = 'replacementYear';
+let sortAsc = true;
+
+// ── Load data ──────────────────────────────────────────────────────────────
+async function loadData() {
+  const idxRes = await fetch('data/index.json');
+  const idx = await idxRes.json();
+  const latest = idx.files[0];
+  const res = await fetch('data/' + latest);
+  PLAN = await res.json();
+  document.getElementById('data-banner').textContent =
+    `Data as of ${new Date(PLAN.exported).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}` +
+    (PLAN.label ? `  ·  ${PLAN.label}` : '');
+  computeUnits();
+  renderAll();
+}
+
+function computeUnits() {
+  UNITS = PLAN.units.map(u => {
+    const esc = PLAN.escalators[u.type] || {vehicle:0, equipment:0};
+    const years = (typeof u.replacementYear === 'number' && typeof u.inServiceYear === 'number')
+      ? u.replacementYear - u.inServiceYear : null;
+    const flagged = years !== null && years < 0;
+    const vehicleCost = years !== null ? u.originalCost * Math.pow(1 + esc.vehicle, years) : 0;
+    const equipmentCost = years !== null ? u.equipmentCost * Math.pow(1 + esc.equipment, years) : 0;
+    return {
+      ...u,
+      years,
+      flagged,
+      vehicleCost,
+      equipmentCost_calc: equipmentCost,
+      totalCost: vehicleCost + equipmentCost,
+      totalOriginal: u.originalCost + u.equipmentCost
+    };
+  });
+}
+
+function fmtCurrency(n) {
+  if (n === null || isNaN(n)) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+// ── Overview card → Units tab, pre-filtered ────────────────────────────────
+function goToUnitsFilteredByType(type) {
+  document.getElementById('filter-type').value = type;
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-tab[data-view="units"]').classList.add('active');
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-units').classList.add('active');
+  renderUnitsTable();
+}
+
+// ── Nav / theme ──────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.body.className = 'theme-' + btn.dataset.theme;
+    localStorage.setItem('fleet-theme', btn.dataset.theme);
+  });
+});
+(function initTheme() {
+  const saved = localStorage.getItem('fleet-theme');
+  if (saved) {
+    document.body.className = 'theme-' + saved;
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === saved));
+  }
+})();
+
+document.getElementById('export-btn').addEventListener('click', () => {
+  window.location.href = 'exports/' + (PLAN.exportFile || 'NPFR_Fleet_Replacement.xlsx');
+});
+
+document.getElementById('hdr-search').addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  if (q) {
+    document.querySelector('.nav-tab[data-view="units"]').click();
+  }
+  renderUnitsTable();
+});
+
+// ── Render: everything ──────────────────────────────────────────────────
+function renderAll() {
+  renderOverview();
+  renderTimeline();
+  populateFilters();
+  renderUnitsTable();
+  renderForecast();
+  document.getElementById('foot-note').textContent =
+    `${UNITS.length} units tracked · North Port Fire Rescue Fleet & Equipment Capital Plan`;
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────
+function renderOverview() {
+  const grandTotal = UNITS.reduce((s,u) => s + u.totalCost, 0);
+  const grandOriginal = UNITS.reduce((s,u) => s + u.totalOriginal, 0);
+  const years = UNITS.map(u => u.replacementYear).filter(y => typeof y === 'number');
+  const minYear = Math.min(...years);
+
+  const strip = document.getElementById('summary-strip');
+  strip.innerHTML = `
+    <div class="strip-card"><div class="strip-label">Total Units</div><div class="strip-val">${UNITS.length}</div></div>
+    <div class="strip-card"><div class="strip-label">Current Fleet Value</div><div class="strip-val">${fmtCurrency(grandOriginal)}</div></div>
+    <div class="strip-card"><div class="strip-label">Projected Replacement Cost</div><div class="strip-val">${fmtCurrency(grandTotal)}</div></div>
+    <div class="strip-card"><div class="strip-label">Next Replacement Year</div><div class="strip-val">${minYear}</div></div>
+  `;
+
+  const grid = document.getElementById('overview-grid');
+  grid.innerHTML = TYPES.map(type => {
+    const units = UNITS.filter(u => u.type === type);
+    const total = units.reduce((s,u) => s + u.totalCost, 0);
+    const yrs = units.map(u => u.replacementYear).filter(y => typeof y === 'number');
+    const next = yrs.length ? Math.min(...yrs) : '—';
+    const nextUnits = units.filter(u => u.replacementYear === next).map(u => u.unit).join(', ');
+    return `
+      <div class="overview-card" style="border-left-color:${TYPE_HEX[type]};cursor:pointer" onclick="goToUnitsFilteredByType('${type}')">
+        <div class="oc-head">
+          <div class="oc-name">${type}</div>
+          <span class="type-pill type-${type}">${units.length} units</span>
+        </div>
+        <div class="oc-stats">
+          <div><div class="oc-stat-label">Replacement Cost</div><div class="oc-stat-val" style="color:${TYPE_HEX[type]}">${fmtCurrency(total)}</div></div>
+          <div><div class="oc-stat-label">Next Due</div><div class="oc-stat-val">${next}</div></div>
+        </div>
+        <div class="oc-next">Next up: <b>${nextUnits || '—'}</b></div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('overview-sub').textContent = '';
+}
+
+// ── Timeline ──────────────────────────────────────────────────────────────
+function renderTimeline() {
+  const years = UNITS.map(u => u.replacementYear).filter(y => typeof y === 'number');
+  const minY = Math.min(...years), maxY = Math.max(...years);
+  const body = document.getElementById('timeline-body');
+  let html = '';
+  for (let yr = minY; yr <= maxY; yr++) {
+    const units = UNITS.filter(u => u.replacementYear === yr).sort((a,b) => b.totalCost - a.totalCost);
+    if (!units.length) continue;
+    const total = units.reduce((s,u) => s + u.totalCost, 0);
+    html += `
+      <div class="year-band" onclick="this.classList.toggle('open')">
+        <span class="year-toggle">▾</span>
+        <span class="year-label">${yr}</span>
+        <span class="year-meta">${units.length} unit${units.length>1?'s':''} due</span>
+        <span class="year-total">${fmtCurrency(total)}</span>
+      </div>
+      <div class="year-units">
+        ${units.map(u => `
+          <div class="unit-row-mini">
+            <span class="type-pill type-${u.type}">${u.type}</span>
+            <span>${u.unit} <span class="muted">(CID# ${u.cid})</span>${u.flagged ? ' <span class="flag-icon" title="Replacement year precedes in-service year — verify data">⚠</span>' : ''}</span>
+            <span class="muted">${u.inServiceYear} → ${u.replacementYear}</span>
+            <span class="unit-cost">${fmtCurrency(u.totalCost)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  body.innerHTML = html;
+  document.getElementById('timeline-sub').textContent = `${minY}–${maxY}`;
+}
+
+// ── Units table ───────────────────────────────────────────────────────────
+function populateFilters() {
+  const typeSel = document.getElementById('filter-type');
+  TYPES.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; typeSel.appendChild(o); });
+
+  const yearSel = document.getElementById('filter-year');
+  const years = [...new Set(UNITS.map(u => u.replacementYear).filter(y => typeof y === 'number'))].sort((a,b)=>a-b);
+  years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
+
+  typeSel.addEventListener('change', renderUnitsTable);
+  yearSel.addEventListener('change', renderUnitsTable);
+  document.querySelectorAll('#units-table th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (sortKey === key) { sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+      document.querySelectorAll('#units-table th').forEach(h => h.classList.remove('sorted','asc'));
+      th.classList.add('sorted'); if (sortAsc) th.classList.add('asc');
+      renderUnitsTable();
+    });
+  });
+}
+
+function renderUnitsTable() {
+  const typeFilter = document.getElementById('filter-type').value;
+  const yearFilter = document.getElementById('filter-year').value;
+  const q = document.getElementById('hdr-search').value.trim().toLowerCase();
+
+  let rows = UNITS.filter(u => {
+    if (typeFilter && u.type !== typeFilter) return false;
+    if (yearFilter && String(u.replacementYear) !== yearFilter) return false;
+    if (q && !(`${u.unit} ${u.cid}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  rows.sort((a,b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv||'').toLowerCase(); }
+    if (av === null || av === undefined) av = -Infinity;
+    if (bv === null || bv === undefined) bv = -Infinity;
+    if (av < bv) return sortAsc ? -1 : 1;
+    if (av > bv) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  document.getElementById('units-tbody').innerHTML = rows.map(u => `
+    <tr class="${u.flagged ? 'flag-row' : ''}">
+      <td><span class="type-pill type-${u.type}">${u.type}</span></td>
+      <td>${highlight(u.unit, q)}${u.flagged ? ' <span class="flag-icon" title="Replacement year precedes in-service year — verify data">⚠</span>' : ''}</td>
+      <td>${highlight(u.cid, q)}</td>
+      <td class="num">${u.inServiceYear ?? '—'}</td>
+      <td class="num">${u.replacementYear ?? '—'}</td>
+      <td class="num">${u.years ?? '—'}</td>
+      <td class="num">${fmtCurrency(u.originalCost)}</td>
+      <td class="num">${fmtCurrency(u.equipmentCost)}</td>
+      <td class="num">${fmtCurrency(u.vehicleCost)}</td>
+      <td class="num">${fmtCurrency(u.equipmentCost_calc)}</td>
+      <td class="num" style="font-weight:600">${fmtCurrency(u.totalCost)}</td>
+    </tr>
+  `).join('');
+  document.getElementById('units-sub').textContent = `${rows.length} of ${UNITS.length} units shown`;
+}
+
+function highlight(text, q) {
+  if (!q) return text;
+  const idx = String(text).toLowerCase().indexOf(q);
+  if (idx === -1) return text;
+  return text.slice(0,idx) + '<mark class="sh">' + text.slice(idx, idx+q.length) + '</mark>' + text.slice(idx+q.length);
+}
+
+// ── Forecast chart (hand-rolled SVG, no chart library) ─────────────────────
+function renderForecast() {
+  const years = UNITS.map(u => u.replacementYear).filter(y => typeof y === 'number');
+  const minY = Math.min(...years), maxY = Math.max(...years);
+  const yearList = [];
+  for (let y = minY; y <= maxY; y++) yearList.push(y);
+
+  const byYearType = {};
+  yearList.forEach(y => { byYearType[y] = {}; TYPES.forEach(t => byYearType[y][t] = 0); });
+  UNITS.forEach(u => { if (byYearType[u.replacementYear]) byYearType[u.replacementYear][u.type] += u.totalCost; });
+
+  const yearTotals = yearList.map(y => TYPES.reduce((s,t) => s + byYearType[y][t], 0));
+  const maxTotal = Math.max(...yearTotals, 1);
+  let cumulative = 0;
+  const cumeVals = yearTotals.map(v => (cumulative += v));
+  const grandTotal = cumulative;
+
+  const W = 1000, H = 420, padL = 70, padB = 50, padT = 20, padR = 20;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const barW = Math.max(6, chartW / yearList.length * 0.6);
+  const gap = chartW / yearList.length;
+
+  let svg = '';
+  // gridlines + y-axis labels
+  const gridSteps = 5;
+  for (let i = 0; i <= gridSteps; i++) {
+    const val = maxTotal * i / gridSteps;
+    const y = padT + chartH - (chartH * i / gridSteps);
+    svg += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>`;
+    svg += `<text x="${padL-8}" y="${y+3}" text-anchor="end" class="axis-label">${fmtShort(val)}</text>`;
+  }
+
+  yearList.forEach((yr, i) => {
+    const x = padL + i * gap + (gap - barW) / 2;
+    let stackY = padT + chartH;
+    TYPES.forEach(t => {
+      const v = byYearType[yr][t];
+      if (v <= 0) return;
+      const h = (v / maxTotal) * chartH;
+      stackY -= h;
+      svg += `<rect class="bar-seg" x="${x}" y="${stackY}" width="${barW}" height="${h}" fill="${TYPE_HEX[t]}"
+                onmousemove="showTip(event,'${t}',${yr},${v})" onmouseleave="hideTip()"/>`;
+    });
+    svg += `<text x="${x + barW/2}" y="${H - padB + 18}" text-anchor="middle" class="year-axis-label">${yr}</text>`;
+  });
+
+  // cumulative line
+  const pts = yearList.map((yr,i) => {
+    const x = padL + i * gap + gap/2;
+    const y = padT + chartH - (cumeVals[i] / (grandTotal || 1)) * chartH;
+    return [x,y];
+  });
+  svg += `<polyline class="cume-line" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+  pts.forEach(([x,y],i) => {
+    svg += `<circle class="cume-dot" cx="${x}" cy="${y}" r="3"
+              onmousemove="showTip(event,'Cumulative total',${yearList[i]},${cumeVals[i]})" onmouseleave="hideTip()"/>`;
+  });
+
+  document.getElementById('forecast-svg').innerHTML = svg;
+
+  document.getElementById('chart-legend').innerHTML = TYPES.map(t => `
+    <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:${TYPE_HEX[t]}"></span>${t}</div>
+  `).join('') + `<div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--gold)"></span>Cumulative total (right scale)</div>`;
+
+  const peakIdx = yearTotals.indexOf(Math.max(...yearTotals));
+  document.getElementById('forecast-strip').innerHTML = `
+    <div class="strip-card"><div class="strip-label">Peak Year</div><div class="strip-val">${yearList[peakIdx]}</div></div>
+    <div class="strip-card"><div class="strip-label">Peak Year Cost</div><div class="strip-val">${fmtCurrency(yearTotals[peakIdx])}</div></div>
+    <div class="strip-card"><div class="strip-label">${minY}–${maxY} Total</div><div class="strip-val">${fmtCurrency(grandTotal)}</div></div>
+  `;
+}
+
+function fmtShort(n) {
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + Math.round(n/1e3) + 'K';
+  return '$' + Math.round(n);
+}
+
+function showTip(evt, label, year, val) {
+  const tip = document.getElementById('chart-tooltip');
+  tip.style.display = 'block';
+  tip.style.left = (evt.clientX + 14) + 'px';
+  tip.style.top = (evt.clientY + 14) + 'px';
+  tip.innerHTML = `<b>${label}</b> · ${year}<br>${fmtCurrency(val)}`;
+}
+function hideTip() { document.getElementById('chart-tooltip').style.display = 'none'; }
+
+loadData().catch(err => {
+  document.getElementById('data-banner').textContent = 'Could not load fleet data: ' + err.message;
+});
+</script>
+</body>
+</html>

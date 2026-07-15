@@ -1,0 +1,331 @@
+{
+  "exported": "2026-07-15T00:00:00",
+  "label": "Initial fleet data load",
+  "escalators": {
+    "Engine": {
+      "vehicle": 0.11,
+      "equipment": 0.06
+    },
+    "Aerial": {
+      "vehicle": 0.11,
+      "equipment": 0.06
+    },
+    "Rescue": {
+      "vehicle": 0.08,
+      "equipment": 0.06
+    },
+    "Staff": {
+      "vehicle": 0.08,
+      "equipment": 0.06
+    }
+  },
+  "units": [
+    {
+      "cid": "74523",
+      "unit": "E81",
+      "type": "Engine",
+      "inServiceYear": 2024,
+      "originalCost": 743872,
+      "replacementYear": 2034,
+      "equipmentCost": 435000
+    },
+    {
+      "cid": "73408",
+      "unit": "E83",
+      "type": "Engine",
+      "inServiceYear": 2020,
+      "originalCost": 622878,
+      "replacementYear": 2030,
+      "equipmentCost": 250000
+    },
+    {
+      "cid": "NEW",
+      "unit": "E85",
+      "type": "Engine",
+      "inServiceYear": 2026,
+      "originalCost": 1077017,
+      "replacementYear": 2036,
+      "equipmentCost": 355000
+    },
+    {
+      "cid": "NEW",
+      "unit": "E87",
+      "type": "Engine",
+      "inServiceYear": 2026,
+      "originalCost": 1077017,
+      "replacementYear": 2036,
+      "equipmentCost": 355000
+    },
+    {
+      "cid": "NEW",
+      "unit": "E88",
+      "type": "Engine",
+      "inServiceYear": 2026,
+      "originalCost": 1077017,
+      "replacementYear": 2036,
+      "equipmentCost": 355000
+    },
+    {
+      "cid": "73389",
+      "unit": "T81",
+      "type": "Engine",
+      "inServiceYear": 2020,
+      "originalCost": 280000,
+      "replacementYear": 2030,
+      "equipmentCost": 100000
+    },
+    {
+      "cid": "73229",
+      "unit": "TRK82",
+      "type": "Aerial",
+      "inServiceYear": 2019,
+      "originalCost": 857113,
+      "replacementYear": 2031,
+      "equipmentCost": 285000
+    },
+    {
+      "cid": "NEW",
+      "unit": "TRK84",
+      "type": "Aerial",
+      "inServiceYear": 2026,
+      "originalCost": 1572471,
+      "replacementYear": 2038,
+      "equipmentCost": 385000
+    },
+    {
+      "cid": "73601",
+      "unit": "TRK86",
+      "type": "Aerial",
+      "inServiceYear": 2021,
+      "originalCost": 994084,
+      "replacementYear": 2033,
+      "equipmentCost": 295000
+    },
+    {
+      "cid": "74483",
+      "unit": "R80",
+      "type": "Rescue",
+      "inServiceYear": 2023,
+      "originalCost": 379974,
+      "replacementYear": 2028,
+      "equipmentCost": 185000
+    },
+    {
+      "cid": "74832",
+      "unit": "R81",
+      "type": "Rescue",
+      "inServiceYear": 2025,
+      "originalCost": 379974,
+      "replacementYear": 2030,
+      "equipmentCost": 206000
+    },
+    {
+      "cid": "74750",
+      "unit": "R82",
+      "type": "Rescue",
+      "inServiceYear": 2023,
+      "originalCost": 379974,
+      "replacementYear": 2028,
+      "equipmentCost": 185000
+    },
+    {
+      "cid": "73268",
+      "unit": "R83",
+      "type": "Rescue",
+      "inServiceYear": 2019,
+      "originalCost": 271202,
+      "replacementYear": 2024,
+      "equipmentCost": 150000
+    },
+    {
+      "cid": "74754",
+      "unit": "R84",
+      "type": "Rescue",
+      "inServiceYear": 2023,
+      "originalCost": 379974,
+      "replacementYear": 2028,
+      "equipmentCost": 185000
+    },
+    {
+      "cid": "74859",
+      "unit": "R85",
+      "type": "Rescue",
+      "inServiceYear": 2025,
+      "originalCost": 379974,
+      "replacementYear": 2030,
+      "equipmentCost": 206000
+    },
+    {
+      "cid": "74860",
+      "unit": "R86",
+      "type": "Rescue",
+      "inServiceYear": 2025,
+      "originalCost": 379974,
+      "replacementYear": 2030,
+      "equipmentCost": 206000
+    },
+    {
+      "cid": "74982",
+      "unit": "R87",
+      "type": "Rescue",
+      "inServiceYear": 2025,
+      "originalCost": 410880,
+      "replacementYear": 2030,
+      "equipmentCost": 206000
+    },
+    {
+      "cid": "NEW",
+      "unit": "R88",
+      "type": "Rescue",
+      "inServiceYear": 2026,
+      "originalCost": 441778,
+      "replacementYear": 2031,
+      "equipmentCost": 206000
+    },
+    {
+      "cid": "73292",
+      "unit": "NPF1 (Titus)",
+      "type": "Staff",
+      "inServiceYear": 2019,
+      "originalCost": 37552,
+      "replacementYear": 2026,
+      "equipmentCost": 46006
+    },
+    {
+      "cid": "73867",
+      "unit": "NPF2 (Lane)",
+      "type": "Staff",
+      "inServiceYear": 2023,
+      "originalCost": 53542,
+      "replacementYear": 2031,
+      "equipmentCost": 46006
+    },
+    {
+      "cid": "73337",
+      "unit": "NPF3 (Herlihy)",
+      "type": "Staff",
+      "inServiceYear": 2019,
+      "originalCost": 37457,
+      "replacementYear": 2026,
+      "equipmentCost": 46006
+    },
+    {
+      "cid": "73164",
+      "unit": "NPF4 (Marretti)",
+      "type": "Staff",
+      "inServiceYear": 2018,
+      "originalCost": 28552,
+      "replacementYear": 2025,
+      "equipmentCost": 9500
+    },
+    {
+      "cid": "73993",
+      "unit": "NPF5 (Satterly)",
+      "type": "Staff",
+      "inServiceYear": 2024,
+      "originalCost": 53542,
+      "replacementYear": 2031,
+      "equipmentCost": 46006
+    },
+    {
+      "cid": "73439",
+      "unit": "NPF6 (Wolbers)",
+      "type": "Staff",
+      "inServiceYear": 2019,
+      "originalCost": 37457,
+      "replacementYear": 2026,
+      "equipmentCost": 46001
+    },
+    {
+      "cid": "73858",
+      "unit": "NPF7 (Inlow)",
+      "type": "Staff",
+      "inServiceYear": 2023,
+      "originalCost": 48137,
+      "replacementYear": 2030,
+      "equipmentCost": 46001
+    },
+    {
+      "cid": "NEW",
+      "unit": "NPF8 (Hawes)",
+      "type": "Staff",
+      "inServiceYear": 2026,
+      "originalCost": 44939,
+      "replacementYear": 2033,
+      "equipmentCost": 46001
+    },
+    {
+      "cid": "73336",
+      "unit": "NPF16 (Wilbert)",
+      "type": "Staff",
+      "inServiceYear": 2019,
+      "originalCost": 37457,
+      "replacementYear": 2026,
+      "equipmentCost": 46001
+    },
+    {
+      "cid": "NEW",
+      "unit": "NPF17 (Jekonski)",
+      "type": "Staff",
+      "inServiceYear": 2026,
+      "originalCost": 44939,
+      "replacementYear": 2033,
+      "equipmentCost": 46001
+    },
+    {
+      "cid": "73165",
+      "unit": "NPF-18 (Sousa)",
+      "type": "Staff",
+      "inServiceYear": 2018,
+      "originalCost": 28552,
+      "replacementYear": 2025,
+      "equipmentCost": 46001
+    },
+    {
+      "cid": "73647",
+      "unit": "DC1",
+      "type": "Staff",
+      "inServiceYear": 2022,
+      "originalCost": 79448,
+      "replacementYear": 2029,
+      "equipmentCost": 82436
+    },
+    {
+      "cid": "73697",
+      "unit": "DC2",
+      "type": "Staff",
+      "inServiceYear": 2022,
+      "originalCost": 91359,
+      "replacementYear": 2029,
+      "equipmentCost": 82436
+    },
+    {
+      "cid": "74012",
+      "unit": "DC3",
+      "type": "Staff",
+      "inServiceYear": 2024,
+      "originalCost": 61460,
+      "replacementYear": 2031,
+      "equipmentCost": 82436
+    },
+    {
+      "cid": "72936",
+      "unit": "Logistics Van",
+      "type": "Staff",
+      "inServiceYear": 2016,
+      "originalCost": 35197,
+      "replacementYear": 2022,
+      "equipmentCost": 800000
+    },
+    {
+      "cid": "74886",
+      "unit": "Trades Worker",
+      "type": "Staff",
+      "inServiceYear": 2026,
+      "originalCost": 80164,
+      "replacementYear": 2022,
+      "equipmentCost": 6000
+    }
+  ],
+  "exportFile": "NPFR_Fleet_Replacement_20260715.xlsx"
+}
