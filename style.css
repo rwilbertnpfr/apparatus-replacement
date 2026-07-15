@@ -49,6 +49,7 @@ body.theme-light {
   --header-bg:#13131f; --header-border:#3a3a5c; --header-accent:#B71C1C;
   --pill-year-bg:rgba(255,255,255,0.08); --pill-year-text:#aaaacc;
   --year-band:#1e1e3a; --year-text:#6a90d9;
+  --band-1:#4a90d9; --band-2:#c77dff;
   --input-bg:#13131f; --input-border:#3a3a5c; --input-text:#e0e0ff;
   --header-h:56px; --radius:8px; --radius-lg:12px;
 }
@@ -61,6 +62,7 @@ body.theme-npfr{
   --header-bg:#4A0A0C; --header-border:#C8A040; --header-accent:#C8A040;
   --pill-year-bg:rgba(255,255,255,0.06); --pill-year-text:#C8A878;
   --year-band:#3a0808; --year-text:#C8A040;
+  --band-1:#C8A040; --band-2:#E0796A;
   --input-bg:#2a0808; --input-border:#5a1a1a; --input-text:#F5E6C8;
 }
 body.theme-light{
@@ -72,6 +74,7 @@ body.theme-light{
   --header-bg:#f8f9fc; --header-border:#c4c8dc; --header-accent:#B71C1C;
   --pill-year-bg:rgba(0,0,0,0.06); --pill-year-text:#565672;
   --year-band:#e4e7f0; --year-text:#0055bb;
+  --band-1:#0055bb; --band-2:#7B1FA2;
   --input-bg:#fff; --input-border:#c4c8dc; --input-text:#1a1a2e;
 }
 
@@ -143,16 +146,16 @@ body.theme-light mark.sh{background:rgba(255,180,0,0.3)}
 .strip-val{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:600;color:var(--gold)}
 
 /* ══ Year band / timeline view ══ */
-.year-band{background:var(--year-band);border-left:4px solid var(--accent);padding:10px 16px;margin-bottom:8px;margin-top:18px;border-radius:0 var(--radius) var(--radius) 0;display:flex;align-items:center;gap:12px;cursor:pointer}
-.year-band:first-child{margin-top:0}
-.year-label{font-family:'DM Sans',sans-serif;font-size:19px;font-weight:600;color:var(--year-text)}
-.year-meta{font-size:13px;color:var(--text-dim);flex:1}
-.year-total{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--text)}
-.year-toggle{font-size:14px;color:var(--text-dim);transition:transform .2s}
-.year-band.open .year-toggle{transform:rotate(180deg)}
-.year-units{display:none;padding:4px 4px 14px}
-.year-band.open + .year-units{display:block}
-.unit-row-mini{display:grid;grid-template-columns:90px 1fr 110px 120px;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;background:var(--card)}
+.year-group{display:grid;grid-template-columns:150px 1fr;margin-bottom:14px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
+.year-side{background:color-mix(in srgb, var(--band-1) 14%, var(--card));border-left:5px solid var(--band-1);padding:16px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.year-group.alt .year-side{background:color-mix(in srgb, var(--band-2) 14%, var(--card));border-left-color:var(--band-2)}
+.year-label{font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;color:var(--band-1)}
+.year-group.alt .year-label{color:var(--band-2)}
+.year-meta{font-size:12px;color:var(--text-dim)}
+.year-total{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text);margin-top:2px}
+.year-rows{background:color-mix(in srgb, var(--band-1) 5%, var(--card));padding:10px 12px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.year-group.alt .year-rows{background:color-mix(in srgb, var(--band-2) 5%, var(--card))}
+.unit-row-mini{display:grid;grid-template-columns:90px 1fr 110px 120px;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--card)}
 .unit-row-mini .muted{color:var(--text-dim);font-size:12px}
 .unit-cost{font-weight:600;text-align:right}
 
@@ -203,6 +206,9 @@ body.theme-light .data-table tr:hover td{background:rgba(0,0,0,0.02)}
   .hdr-search:focus{width:100% !important}
   #layout{padding:16px 12px}
   #overview-grid{grid-template-columns:1fr}
+  .year-group{grid-template-columns:1fr}
+  .year-side{border-left:none;border-top:5px solid var(--band-1);flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:8px}
+  .year-group.alt .year-side{border-top-color:var(--band-2)}
   .unit-row-mini{grid-template-columns:1fr;gap:2px}
   .summary-strip{flex-direction:column}
 }

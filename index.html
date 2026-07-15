@@ -256,26 +256,30 @@ function renderTimeline() {
   const minY = Math.min(...years), maxY = Math.max(...years);
   const body = document.getElementById('timeline-body');
   let html = '';
+  let bandIdx = 0;
   for (let yr = minY; yr <= maxY; yr++) {
     const units = UNITS.filter(u => u.replacementYear === yr).sort((a,b) => b.totalCost - a.totalCost);
     if (!units.length) continue;
     const total = units.reduce((s,u) => s + u.totalCost, 0);
+    const altClass = bandIdx % 2 ? 'alt' : '';
+    bandIdx++;
     html += `
-      <div class="year-band" onclick="this.classList.toggle('open')">
-        <span class="year-toggle">▾</span>
-        <span class="year-label">${yr}</span>
-        <span class="year-meta">${units.length} unit${units.length>1?'s':''} due</span>
-        <span class="year-total">${fmtCurrency(total)}</span>
-      </div>
-      <div class="year-units">
-        ${units.map(u => `
-          <div class="unit-row-mini">
-            <span class="type-pill type-${u.type}">${u.type}</span>
-            <span>${u.unit} <span class="muted">(CID# ${u.cid})</span>${u.flagged ? ' <span class="flag-icon" title="Replacement year precedes in-service year — verify data">⚠</span>' : ''}</span>
-            <span class="muted">${u.inServiceYear} → ${u.replacementYear}</span>
-            <span class="unit-cost">${fmtCurrency(u.totalCost)}</span>
-          </div>
-        `).join('')}
+      <div class="year-group ${altClass}">
+        <div class="year-side">
+          <div class="year-label">${yr}</div>
+          <div class="year-meta">${units.length} unit${units.length>1?'s':''} due</div>
+          <div class="year-total">${fmtCurrency(total)}</div>
+        </div>
+        <div class="year-rows">
+          ${units.map(u => `
+            <div class="unit-row-mini">
+              <span class="type-pill type-${u.type}">${u.type}</span>
+              <span>${u.unit} <span class="muted">(CID# ${u.cid})</span>${u.flagged ? ' <span class="flag-icon" title="Replacement year precedes in-service year — verify data">⚠</span>' : ''}</span>
+              <span class="muted">${u.inServiceYear} → ${u.replacementYear}</span>
+              <span class="unit-cost">${fmtCurrency(u.totalCost)}</span>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `;
   }
